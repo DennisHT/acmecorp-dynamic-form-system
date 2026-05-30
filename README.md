@@ -6,8 +6,10 @@ Indonesia), supports Google Maps address autocomplete, and saves submissions to
 a SQLite-backed Express API that validates against the same per-country schema.
 
 > **Note on branches:** This was a 2-hour exercise. The `master` branch holds
-> the original first-2-hour submission; the continued work lives in the
-> **`after-2-hours`** branch. The form went from hardcoded per-country components to fully schema-driven rendering. See [Design Decisions & Tradeoffs](#design-decisions--tradeoffs).
+> the original first-2-hour submission; this **`after-2-hours`** branch is the
+> continued work, where the form became fully schema-driven — the frontend now
+> renders directly from the server schema instead of hardcoded per-country
+> components. See [Design Decisions & Tradeoffs](#design-decisions--tradeoffs).
 
 ## Tech Stack
 
@@ -80,9 +82,9 @@ server/                Express API + SQLite
   db.ts                Database setup
   countries.ts         Per-country field schemas (single source of truth)
 src/
-  App.tsx              Main form, country switching
+  App.tsx              Main form, country switching, schema-driven rendering
   component/           Inputs, Select, AddressAutocomplete
-    FormContent/       Country-specific field sets (USA / AUS / IDN)
+    FormContent/       Legacy static field sets (unused; superseded by schema rendering)
   utils/               Google autocomplete helpers
 ```
 
@@ -93,17 +95,18 @@ completeness. The guiding decision was to make **one schema the single source of
 truth** and grow everything else around it.
 
 **One schema as the source of truth (`server/countries.ts`).** Each country's
-fields, options, and validation patterns live in a single server object, and the
-backend validates submissions against it. The API also exposes this schema
-(`/api/countries`, `/api/countries/:code`) so the frontend can render straight
-from it.
+fields, options, and validation patterns live in a single server object. The API
+exposes it (`/api/countries`, `/api/countries/:code`); the frontend renders its
+inputs directly from that schema, and the backend validates submissions against
+the _same_ definition.
 
-- _Why:_ Adding or changing a country becomes a one-file edit, and validation
-  can never drift from the field definitions.
-- _Tradeoff:_ In this first pass the frontend still renders **static per-country
-  components** (`FormUSA/AUS/IDN`) with a hardcoded country list, so the field
-  definitions effectively exist twice. The `after-2-hours` branch removes that
-  duplication by rendering directly from the schema.
+- _Why:_ Adding or changing a country is a one-file edit, the field definitions
+  exist in exactly one place, and client rendering can never drift from server
+  validation.
+- _Tradeoff:_ The UI is coupled to the schema's shape, and the form can't render
+  until the schema request resolves. (The first-pass `master` branch instead
+  hardcoded static per-country components — this branch removed that
+  duplication.)
 
 **Schema served over HTTP rather than a shared import.** The client fetches the
 country list and field schema at runtime.
@@ -125,14 +128,13 @@ JSON string keyed by country.
 - _Why:_ No external dependency to run the demo.
 - _Tradeoff:_ Single-writer; not for concurrent production load.
 
-**Validation runs on the server** (required fields + regex patterns) rather than
-trusting the client.
+**Validation runs on the server** (required fields, regex patterns, and
+rejection of unknown fields) rather than trusting the client.
 
 - _Why:_ The API must stay safe against direct or malformed requests.
-- _Tradeoff:_ Some redundancy once the client also validates. (The
-  `after-2-hours` branch additionally rejects unknown fields.)
+- _Tradeoff:_ Some redundancy once the client also validates.
 
-**Deferred due to the time box:** rendering the frontend from the schema instead
-of static components (done in `after-2-hours`), surfacing validation errors back
-into the form UI (currently only logged), client-side pattern validation, and
-tests.
+**Deferred due to the time box:** surfacing validation errors back into the form
+UI (currently only logged), client-side pattern validation, tests, and removing
+the now-unused static `FormUSA/AUS/IDN` components left over from the `master`
+version.
