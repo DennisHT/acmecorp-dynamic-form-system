@@ -1,6 +1,7 @@
 export const COUNTRIES: Record<
   string,
   {
+    formName: string;
     label: string;
     fields: {
       name: string;
@@ -13,6 +14,7 @@ export const COUNTRIES: Record<
   }
 > = {
   us: {
+    formName: "Form USA",
     label: "United States",
     fields: [
       {
@@ -45,6 +47,7 @@ export const COUNTRIES: Record<
     ],
   },
   au: {
+    formName: "Form Australia",
     label: "Australia",
     fields: [
       {
@@ -77,6 +80,7 @@ export const COUNTRIES: Record<
     ],
   },
   id: {
+    formName: "Form Indonesia",
     label: "Indonesia",
     fields: [
       {

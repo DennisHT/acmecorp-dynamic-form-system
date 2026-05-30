@@ -19,6 +19,7 @@ type CountryField = {
 };
 
 type CountrySchema = {
+  formName: string;
   label: string;
   fields: CountryField[];
 };
@@ -78,7 +79,7 @@ export default function App() {
   }, [selectedCountry]);
 
   return (
-    <div className="flex items-center flex-col gap-2">
+    <div className="flex items-center flex-col gap-2" style={{ padding: 20 }}>
       <h1>AcmeCorp Form</h1>
       <div className="flex flex-col gap-3">
         <Select
@@ -99,6 +100,7 @@ export default function App() {
         </button>
         {manualEdit && schema && (
           <>
+            <h2>{schema.formName}</h2>
             {schema.fields.map((field) => {
               if (field.type === "select") {
                 return (
