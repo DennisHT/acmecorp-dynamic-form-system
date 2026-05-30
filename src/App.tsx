@@ -1,10 +1,6 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./component/Input";
 import { Select } from "./component/Select";
-import { FormUSA } from "./component/FormContent/FormUSA";
-import { FormAUS } from "./component/FormContent/FormAUS";
-import { FormIDN } from "./component/FormContent/FormIDN";
 import { useForm } from "react-hook-form";
 import { AddressAutocomplete } from "./component/AddressAutocomplete";
 
@@ -12,6 +8,19 @@ type AcmeCorpForm = {
   country: string;
   address: string;
   [key: string]: string;
+};
+
+type CountryField = {
+  name: string;
+  label: string;
+  type: "text" | "select";
+  required: boolean;
+  options?: string[];
+};
+
+type CountrySchema = {
+  label: string;
+  fields: CountryField[];
 };
 
 const onSubmit = async (data: AcmeCorpForm) => {
@@ -38,8 +47,35 @@ const onSubmit = async (data: AcmeCorpForm) => {
 
 export default function App() {
   const [manualEdit, setManualEdit] = useState(false);
-  const { register, handleSubmit, watch, setValue } = useForm<AcmeCorpForm>();
+  const { register, handleSubmit, watch, setValue } = useForm<AcmeCorpForm>({
+    shouldUnregister: true,
+    defaultValues: { country: "us" },
+  });
   const selectedCountry = watch("country");
+  const [schema, setSchema] = useState<CountrySchema | null>(null);
+  const [countryList, setCountryList] = useState<
+    { label: string; value: string }[]
+  >([]);
+
+  useEffect(() => {
+    fetch("/api/countries")
+      .then((r) => r.json())
+      .then((list) => {
+        setCountryList(list);
+
+        if (!list.find((c: any) => c.value === selectedCountry)) {
+          setValue("country", list[0].value);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    fetch(`/api/countries/${selectedCountry}`)
+      .then((r) => r.json())
+      .then(setSchema)
+      .catch(console.error);
+  }, [selectedCountry]);
 
   return (
     <div className="flex items-center flex-col gap-2">
@@ -47,11 +83,11 @@ export default function App() {
       <div className="flex flex-col gap-3">
         <Select
           label="Select Country"
-          options={[
-            { label: "USA", value: "us" },
-            { label: "AUS", value: "au" },
-            { label: "IDN", value: "id" },
-          ]}
+          options={
+            countryList.length > 0
+              ? countryList
+              : [{ label: "Loading...", value: "" }]
+          }
           {...register("country")}
         />
         <AddressAutocomplete setValue={setValue} country={selectedCountry} />
@@ -61,10 +97,43 @@ export default function App() {
         >
           Toggle Edit
         </button>
-        {manualEdit && selectedCountry === "us" && <FormUSA register={register} />}
-        {manualEdit && selectedCountry === "au" && <FormAUS register={register} />}
-        {manualEdit && selectedCountry === "id" && <FormIDN register={register} />}
-        <button onClick={handleSubmit(onSubmit, (errs) => console.log("RHF blocked submit:", errs))}>Submit</button>
+        {manualEdit && schema && (
+          <>
+            {schema.fields.map((field) => {
+              if (field.type === "select") {
+                return (
+                  <Select
+                    key={field.name}
+                    label={field.label}
+                    options={
+                      field.options?.map((o) => ({
+                        label: o,
+                        value: o,
+                      })) ?? []
+                    }
+                    {...register(field.name)}
+                  />
+                );
+              }
+
+              return (
+                <Input
+                  key={field.name}
+                  label={field.label}
+                  {...register(field.name)}
+                />
+              );
+            })}
+          </>
+        )}
+        <button
+          className="border"
+          onClick={handleSubmit(onSubmit, (errs) =>
+            console.log("RHF blocked submit:", errs),
+          )}
+        >
+          Submit
+        </button>
       </div>
     </div>
   );
