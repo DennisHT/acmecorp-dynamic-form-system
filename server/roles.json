@@ -1,0 +1,63 @@
+{
+  "roles": [
+    {
+      "name": "Admin",
+      "permissions": [
+        {
+          "name": "create_user",
+          "label": "Create User"
+        },
+        {
+          "name": "delete_user",
+          "label": "Delete User"
+        }
+      ]
+    },
+    {
+      "name": "Customer Service",
+      "permissions": [
+
+      ]
+    }
+  ]
+}
+
+{
+  "permissions_list": [
+    {
+      "category": "administration",
+      "permissions": [
+        {"name": "create_user", "anchor": true},
+        "update_user",
+        "delete_user"
+      ]
+    },
+    {
+      "category": "check_report",
+      "permissions": [
+        "view_report",
+        "add_report",
+        "..."
+      ]
+    }
+  ]
+}
+
+{
+  "full_name": "Dennis Harley",
+  "email": "something@gmail.com",
+  "roles"
+}
+
+
+Administration
+- 
+-
+-
+
+
+Report
+-
+-
+-
+
